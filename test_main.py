@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from main import app
+from unittest.mock import patch, MagicMock
 
 # Creamos un cliente de pruebas basado en tu app
 client = TestClient(app)
@@ -12,25 +13,26 @@ def test_read_root():
     assert response.json() == {"status": "Servidor funcionando correctamente"}
 
 
-def test_get_shoa_time():
-    # Prueba para tu ruta de la hora
+# El decorador @patch intercepta la llamada a requests.get dentro de main.py
+@patch("main.requests.get")
+def test_get_shoa_time(mock_get):
+    # 1. Configuramos el "doble de acción" (Mock)
+    # Simulamos que el SHOA nos devolvió exactamente el texto que descubriste
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.text = "20:32:16:05:04:2026:0"  # Un texto de prueba
+
+    # Le decimos a mock_get que devuelva esta respuesta falsa
+    mock_get.return_value = mock_response
+
+    # 2. Hacemos la petición a nuestra API (creerá que contactó al SHOA real)
     response = client.get("/time")
 
-    # 1. Verificamos que el servidor responda OK (200)
+    # 3. Verificamos que todo funcione
     assert response.status_code == 200
 
-    # 2. Obtenemos el JSON de respuesta
     data = response.json()
-
-    # 3. Verificamos que la llave "hora_oficial" exista en el JSON
     assert "hora_oficial" in data
-
-    # 4. Verificamos que el formato cumpla con la rúbrica (19 caracteres)
-    # Ejemplo: "2026-04-05 20:32:16" tiene exactamente 19 caracteres de largo
     assert len(data["hora_oficial"]) == 19
-
-    # 5. Verificamos que el formato contenga el guion del año-mes-día
     assert "-" in data["hora_oficial"]
-
-    # 6. Verificamos que el formato contenga los dos puntos de la hora
     assert ":" in data["hora_oficial"]
