@@ -3,6 +3,6 @@ Aplicacion FastAPI que obtiene la hora oficial de Chile Continental por medio de
 ### Estado del Pipeline (CI/CD)
 [![Pipeline CI/CD](https://github.com/Lceag1/Solemne_01_LC/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Lceag1/Solemne_01_LC/actions)
 
-### Para Ejecutar: 
+### Para Ejecutar: http://127.0.0.1:8000/time
 ```bash
 docker run -p 8000:8000 luiscea1/solemne-api:latest
