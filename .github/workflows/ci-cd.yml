@@ -1,0 +1,51 @@
+name: Pipeline CI/CD Solemne 1
+
+# El pipeline se activará automáticamente cada vez que hagas un "push" a la rama main
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # ==========================================
+  # ETAPA 1: INTEGRACIÓN CONTINUA (CI) - TESTS
+  # ==========================================
+  integracion-y-pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Instalar dependencias
+        run: uv sync --frozen
+
+      - name: Ejecutar pruebas unitarias (Pytest)
+        run: uv run pytest -v
+
+  # ==========================================
+  # ETAPA 2: ENTREGA CONTINUA (CD) - DOCKER
+  # ==========================================
+  construccion-y-despliegue:
+    needs: integracion-y-pruebas
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Iniciar sesión en Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Construir y subir imagen a Docker Hub
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          # Esto etiquetará la imagen automáticamente con tu usuario
+          tags: ${{ secrets.DOCKER_USERNAME }}/solemne-api:latest
